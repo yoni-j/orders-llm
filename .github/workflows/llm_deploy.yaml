@@ -40,5 +40,4 @@ jobs:
           --source src \
           --entry-point subscribe \
           --trigger-topic llm-topic
-          --project yonidev \
           --set-env-vars GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
