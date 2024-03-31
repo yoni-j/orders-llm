@@ -28,7 +28,10 @@ jobs:
           outfile-name: src/requirements.txt
 
       - name: Create pub/sub topic
-        run: gcloud pubsub topics create llm-topic
+        run: |
+          if ! gcloud pubsub topics exists projects/yonidev/topics/llm-topic; then
+            gcloud pubsub topics create llm-topic
+          fi
 
       - name: Deploy Cloud Function
         run: |
