@@ -36,7 +36,6 @@ jobs:
           gcloud functions deploy llm-function \
           --runtime python311 \
           --region us-east1 \
-          --entry-point handler \
           --allow-unauthenticated \
           --source src \
           --entry-point subscribe \
