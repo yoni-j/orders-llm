@@ -34,9 +34,12 @@ jobs:
       - name: Deploy Cloud Function
         run: |
           gcloud functions deploy llm-function \
-          --runtime=python311 \
-          --region=us-east1 \
-          --source=src \
-          --entry-point=subscribe \
-          --trigger-topic=llm-topic
+          --runtime python311 \
+          --region us-east1 \
+          --entry-point handler \
+          --allow-unauthenticated \
+          --source src \
+          --entry-point subscribe \
+          --trigger-topic llm-topic
+          --project yonidev \
           --set-env-vars GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
