@@ -5,7 +5,7 @@ import google.generativeai as genai
 from cloudevents.http import CloudEvent
 import functions_framework
 
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', 'AIzaSyD4ShYWIkPoNmco52c5IiaVTSXrLQCsoCk')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
 
 model = genai.GenerativeModel('gemini-pro')
