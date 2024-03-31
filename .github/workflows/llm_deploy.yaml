@@ -1,0 +1,42 @@
+name: Deploy Llm function
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Export from poetry to requirements.txt
+        uses: divideprojects/poetry-export-requirements-action@v1
+        with:
+          without-hashes: true
+          outfile-name: src/requirements.txt
+
+      - name: Create pub/sub topic
+        run: gcloud pubsub topics create llm-topic
+
+      - name: Deploy Cloud Function
+        run: |
+          gcloud functions deploy llm-function \
+          --gen2 \
+          --runtime=python312 \
+          --region=us-east1 \
+          --source=src \
+          --entry-point=subscribe \
+          --trigger-topic=llm-topic
+          --set-env-vars GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
