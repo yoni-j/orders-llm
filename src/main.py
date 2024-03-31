@@ -14,6 +14,6 @@ model = genai.GenerativeModel('gemini-pro')
 @functions_framework.cloud_event
 def subscribe(cloud_event: CloudEvent):
     print(
-        "Hello, " + base64.b64decode(cloud_event.data["message"]["data"]).decode() + "!"
+        base64.b64decode(cloud_event.data["message"]["data"]).decode()
     )
 
