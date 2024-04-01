@@ -15,27 +15,24 @@ model = genai.GenerativeModel('gemini-pro')
 BEFORE_LIST_HISTORY = [
     {
         'role': 'user',
-        'parts': [
-            'הוראות כלליות: '
-            'על הודעה עם בקשה לייצר רשימת קניות חדשה תשלח רק את המילה - רשימה.'
-            ' בקשה כזאת יכולה להופיע בכל מיני צורות, לדוגמה - '
-            'רשימה חדשה, רשימהֿ, הזמנה חדשה, תכין לי רשימה, אני רוצה ללכת לקניות ועוד. '
-            'על כל דבר אחר תענה בצורה רגילה']
+        'parts': ['answer "#רשימה#" no matter what']
     },
     {
         'role': 'model',
-        'parts': ['אין בעיה'],
-    },
+        'parts': ['okay']
+    }
 ]
 
 
 @functions_framework.cloud_event
 def subscribe(cloud_event: CloudEvent):
     message_data = json.loads(base64.b64decode(cloud_event.data["message"]["data"]).decode())
-    chat = model.start_chat(history=BEFORE_LIST_HISTORY)
-    resp = chat.send_message(
-        content=message_data["message"],
+    chat_messages = BEFORE_LIST_HISTORY.copy()
+    chat_messages.append(
+        {'role': 'user',
+         'parts': [message_data["message"]]}
     )
+    resp = model.generate_content(chat_messages)
     url = "https://us-east1-yonidev.cloudfunctions.net/orders-bot"
 
     headers = {
