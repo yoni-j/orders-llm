@@ -6,6 +6,7 @@ from cloudevents.http import CloudEvent
 import functions_framework
 
 from rag import RagPrompt
+from mock_list import create_mock_recommendations
 
 BOT_URL = "https://us-east1-yonidev.cloudfunctions.net/orders-bot"
 
@@ -20,7 +21,9 @@ def subscribe(cloud_event: CloudEvent):
 
     # Handle message from list generator
     if "source" in message_data and message_data["source"] == PubSource.LIST_GENERATOR:
-        pass
+        rag_service = RagPrompt(before_list=False)
+        recommendations = create_mock_recommendations()
+        rag_service.invoke_first_message_after_list(recommendations)
 
     # Handle message from bot
     else:

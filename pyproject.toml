@@ -10,6 +10,7 @@ python = "^3.11"
 functions-framework = "^3.5.0"
 langchain-google-genai = "^1.0.1"
 langchain = "^0.1.14"
+pandas = "^2.2.1"
 
 
 [build-system]
