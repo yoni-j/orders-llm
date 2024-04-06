@@ -15,7 +15,9 @@ class RagPrompt:
     CREATE_LIST_TRIGGER = "#רשימה#"
     CREATE_LIST_RESPONSE = "מכין רשימה חדשה, כבר איתך"
 
-    def __init__(self, history: list[tuple] = None, before_list: bool = True):
+    def __init__(self, history=None, before_list: bool = True):
+        if history is None:
+            history = []
         self.before_list = before_list
         self.history = self._tune_history(history)
         self.llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.0, google_api_key=GOOGLE_API_KEY)
