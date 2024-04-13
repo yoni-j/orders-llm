@@ -6,7 +6,8 @@ from cloudevents.http import CloudEvent
 import functions_framework
 
 from rag import RagPrompt
-from mock_list import create_mock_recommendations
+from data_service import DataService
+from prediction import create_recommedation
 
 BOT_URL = "https://us-east1-yonidev.cloudfunctions.net/orders-bot"
 
@@ -18,26 +19,47 @@ class PubSource:
 @functions_framework.cloud_event
 def subscribe(cloud_event: CloudEvent):
     message_data = json.loads(base64.b64decode(cloud_event.data["message"]["data"]).decode())
+    headers = {
+        'Content-Type': 'application/json'
+    }
 
+    data = {
+        'chat_id': message_data["chat_id"],
+        'disable_notification': True
+    }
     # Handle message from list generator
     if "source" in message_data and message_data["source"] == PubSource.LIST_GENERATOR:
-        rag_service = RagPrompt(before_list=False)
-        recommendations = create_mock_recommendations()
-        rag_service.invoke_first_message_after_list(recommendations)
+        data["text"], history = handle_message_from_list_generator(message_data)
 
     # Handle message from bot
     else:
-        rag_service = RagPrompt()
-        response_text = rag_service.invoke(message_data["message"])
+        data["text"], history = handle_message_from_bot(message_data)
 
-        headers = {
-            'Content-Type': 'application/json'
-        }
+    resp = requests.post(BOT_URL, headers=headers, data=json.dumps(data))
+    if resp.status_code == 200:
+        DataService.update_data(message_data["chat_id"], history)
 
-        data = {
-            'chat_id': message_data["chat_id"],
-            'text': f"#from_llm#{response_text}",
-            'disable_notification': True
-        }
 
-        requests.post(BOT_URL, headers=headers, data=json.dumps(data))
+def handle_message_from_bot(message_data):
+    history = json.loads(get_history(message_data["chat_id"]))
+    before_list = get_list(message_data["chat_id"]) == '[]'
+    history = DataService.format_history(history)
+    rag_service = RagPrompt(history=history, before_list=before_list)
+    response_text, history = rag_service.invoke(message_data["message"])
+    return f"#from_llm#{response_text}", history
+
+
+def handle_message_from_list_generator(message_data):
+    rag_service = RagPrompt(before_list=False)
+    recommendations = json.loads(get_list(message_data["chat_id"]))
+    recommendations = create_recommedation(recommendations)
+    ai_message, history = rag_service.invoke_first_message_after_list(json.dumps(recommendations))
+    return f"#from_llm#{ai_message}", history
+
+
+def get_list(chat_id):
+    return DataService.get_data(chat_id + "_list")
+
+
+def get_history(chat_id):
+    return DataService.get_data(chat_id)

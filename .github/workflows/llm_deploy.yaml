@@ -27,6 +27,15 @@ jobs:
           without-hashes: true
           outfile-name: src/requirements.txt
 
+      - name: Install dependencies for tests
+        run: pip install -r src/requirements.txt
+
+      - name: Run Tests
+        run: pytest src/tests.py
+
+      - name: Delete tests files
+        run: rm -rf sec/tests.py src/mock_list.py
+
       - name: Create pub/sub topic
         run: |
           gcloud pubsub topics create llm-topic || true
