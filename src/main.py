@@ -8,12 +8,10 @@ import functions_framework
 from rag import RagPrompt
 from data_service import DataService
 from prediction import create_recommedation
+from enums import PubSource, PrefixSuffixEnum
 
 BOT_URL = "https://us-east1-yonidev.cloudfunctions.net/orders-bot"
 
-
-class PubSource:
-    LIST_GENERATOR: str = "list_generator"
 
 
 @functions_framework.cloud_event
@@ -46,7 +44,7 @@ def handle_message_from_bot(message_data):
     history = DataService.format_history(history)
     rag_service = RagPrompt(history=history, before_list=before_list)
     response_text, history = rag_service.invoke(message_data["message"])
-    return f"#from_llm#{response_text}", history
+    return f"{PrefixSuffixEnum.FROM_LLM_MESSAGE_PREFIX}{response_text}", history
 
 
 def handle_message_from_list_generator(message_data):
@@ -54,11 +52,11 @@ def handle_message_from_list_generator(message_data):
     recommendations = json.loads(get_list(message_data["chat_id"]))
     recommendations = create_recommedation(recommendations)
     ai_message, history = rag_service.invoke_first_message_after_list(json.dumps(recommendations))
-    return f"#from_llm#{ai_message}", history
+    return f"{PrefixSuffixEnum.FROM_LLM_MESSAGE_PREFIX}{ai_message}", history
 
 
 def get_list(chat_id):
-    return DataService.get_data(chat_id + "_list")
+    return DataService.get_data(chat_id + PrefixSuffixEnum.LIST_KEY_SUFFIX)
 
 
 def get_history(chat_id):

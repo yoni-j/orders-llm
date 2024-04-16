@@ -5,8 +5,9 @@ from unittest import mock
 
 from cloudevents.http import CloudEvent
 
-from main import PubSource, handle_message_from_list_generator, handle_message_from_bot
+from main import handle_message_from_list_generator, handle_message_from_bot
 from mock_list import mock_orders
+from enums import PubSource, PrefixSuffixEnum
 
 mock_data = {
     "message": "lalala",
@@ -41,7 +42,7 @@ class TestInvoke(unittest.TestCase):
         self.assertEqual(history[0][0], "human")
         self.assertIn(expected_history_contains, history[0][1])
         self.assertEqual(history[1], ("ai", "list_text"))
-        self.assertEqual(message, "#from_llm#list_text")
+        self.assertEqual(message, f"{PrefixSuffixEnum.FROM_LLM_MESSAGE_PREFIX}list_text")
 
     @mock.patch('main.get_history')
     @mock.patch('main.get_list')
@@ -55,7 +56,7 @@ class TestInvoke(unittest.TestCase):
         message, history = handle_message_from_bot(mock_data_from_bot)
         expected_history = [("human", "lalala"), ("ai", "generic_text")]
         self.assertEqual(expected_history, history)
-        self.assertEqual(message, "#from_llm#generic_text")
+        self.assertEqual(message, f"{PrefixSuffixEnum.FROM_LLM_MESSAGE_PREFIX}generic_text")
 
     @mock.patch('main.get_history')
     @mock.patch('main.get_list')
@@ -70,4 +71,4 @@ class TestInvoke(unittest.TestCase):
         expected_history = [("human", "lalala"), ("ai", "generic_text")]
         self.assertEqual(len(history), 4)
         self.assertEqual(history[2:], expected_history)
-        self.assertEqual(message, "#from_llm#generic_text")
+        self.assertEqual(message, f"{PrefixSuffixEnum.FROM_LLM_MESSAGE_PREFIX}generic_text")
