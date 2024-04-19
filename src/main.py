@@ -39,7 +39,7 @@ def subscribe(cloud_event: CloudEvent):
 
 def handle_message_from_bot(message_data):
     history = json.loads(get_history(message_data["chat_id"]))
-    before_list = get_list(message_data["chat_id"]) == '[]'
+    before_list = get_list(str(message_data["chat_id"])) == '[]'
     history = DataService.format_history(history)
     rag_service = RagPrompt(chat_id=message_data["chat_id"], history=history, before_list=before_list)
     response_text, history = rag_service.invoke(message_data["message"])
@@ -48,7 +48,7 @@ def handle_message_from_bot(message_data):
 
 def handle_message_from_list_generator(message_data):
     rag_service = RagPrompt(chat_id=message_data["chat_id"], before_list=False)
-    recommendations = json.loads(get_list(message_data["chat_id"]))
+    recommendations = json.loads(get_list(str(message_data["chat_id"])))
     recommendations = create_recommedation(recommendations)
     ai_message, history = rag_service.invoke_first_message_after_list(json.dumps(recommendations))
     return f"{PrefixSuffixEnum.FROM_LLM_MESSAGE_PREFIX}{ai_message}", history
