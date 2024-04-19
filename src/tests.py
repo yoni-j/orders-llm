@@ -33,10 +33,12 @@ class TestInvoke(unittest.TestCase):
     @mock.patch('main.get_list')
     @mock.patch('rag.RagPrompt._chain_invoke')
     @mock.patch('rag.RagPrompt._get_llm')
-    def test_handle_message_from_list_generator(self, mock_get_llm, chain_invoke, mock_get_data):
+    @mock.patch('rag.RagPrompt._generate_list')
+    def test_handle_message_from_list_generator(self, mock_gen_list, mock_get_llm, chain_invoke, mock_get_data):
         mock_get_llm.return_value = dict()
         mock_get_data.return_value = mock_orders
         chain_invoke.return_value = "list_text"
+        mock_gen_list.return_value = None
         message, history = handle_message_from_list_generator(mock_data)
         expected_history_contains = "תכין לי רשימת קניות"
         self.assertEqual(history[0][0], "human")
@@ -48,11 +50,13 @@ class TestInvoke(unittest.TestCase):
     @mock.patch('main.get_list')
     @mock.patch('rag.RagPrompt._chain_invoke')
     @mock.patch('rag.RagPrompt._get_llm')
-    def test_handle_message_from_bot_after_list(self, mock_get_llm, chain_invoke, mock_get_list, mock_get_history):
+    @mock.patch('rag.RagPrompt._generate_list')
+    def test_handle_message_from_bot_after_list(self, mock_gen_list, mock_get_llm, chain_invoke, mock_get_list, mock_get_history):
         mock_get_llm.return_value = dict()
         chain_invoke.return_value = "generic_text"
         mock_get_list.return_value = mock_orders
         mock_get_history.return_value = '[]'
+        mock_gen_list.return_value = None
         message, history = handle_message_from_bot(mock_data_from_bot)
         expected_history = [("human", "lalala"), ("ai", "generic_text")]
         self.assertEqual(expected_history, history)
@@ -62,11 +66,13 @@ class TestInvoke(unittest.TestCase):
     @mock.patch('main.get_list')
     @mock.patch('rag.RagPrompt._chain_invoke')
     @mock.patch('rag.RagPrompt._get_llm')
-    def test_handle_message_from_bot_before_list(self, mock_get_llm, chain_invoke, mock_get_list, mock_get_history):
+    @mock.patch('rag.RagPrompt._generate_list')
+    def test_handle_message_from_bot_before_list(self, mock_gen_list, mock_get_llm, chain_invoke, mock_get_list, mock_get_history):
         mock_get_llm.return_value = dict()
         chain_invoke.return_value = "generic_text"
         mock_get_list.return_value = '[]'
         mock_get_history.return_value = '[]'
+        mock_gen_list.return_value = None
         message, history = handle_message_from_bot(mock_data_from_bot)
         expected_history = [("human", "lalala"), ("ai", "generic_text")]
         self.assertEqual(len(history), 4)

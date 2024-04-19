@@ -1,9 +1,12 @@
+import json
 import os
 from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages.human import HumanMessage
+
+from google.cloud import pubsub_v1
 
 from enums import RagEnum
 
@@ -12,7 +15,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 class RagPrompt:
 
-    def __init__(self, history=None, before_list: bool = True):
+    def __init__(self, chat_id: str, history=None, before_list: bool = True):
         if history is None:
             history = []
         self.before_list = before_list
@@ -20,6 +23,7 @@ class RagPrompt:
         self.llm = self._get_llm()
         self.parser = StrOutputParser()
         self.chain = self.llm | self.parser
+        self.chat_id = chat_id
 
     def invoke(self, user_text: str) -> tuple:
         message_prompt = "{text}"
@@ -49,8 +53,16 @@ class RagPrompt:
         return text
 
     def _generate_list(self):
-        # TODO: trigger list generator
-        pass
+        publisher = pubsub_v1.PublisherClient()
+        topic_path = publisher.topic_path("yonidev", "generate-list-topic")
+        message_bytes = json.dumps(
+            {"chat_id": self.chat_id}
+        ).encode("utf-8")
+        try:
+            publish_future = publisher.publish(topic_path, data=message_bytes)
+            publish_future.result()
+        except Exception as e:
+            print(f"Error publishing message: {e}")
 
     def invoke_first_message_after_list(self, orders_json_str: str):
         message_prompt = orders_json_str+RagEnum.CREATE_ORDER_FROM_PREDICTION_USER_MESSAGE
